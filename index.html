@@ -14,7 +14,6 @@
   </style>
   <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-storage-compat.js"></script>
   <script src="firebase.js"></script>
 </head>
 <body>
@@ -38,7 +37,6 @@
         <option>Bikes</option>
         <option>Cars</option>
       </select>
-      <input type="file" id="itemImage" accept="image/*" required>
       <button type="submit">Submit Item</button>
     </form>
     <div id="message"></div>
@@ -54,16 +52,11 @@
       const itemDescription = document.getElementById('itemDescription').value;
       const itemPrice = document.getElementById('itemPrice').value;
       const itemCategory = document.getElementById('itemCategory').value;
-      const itemImage = document.getElementById('itemImage').files[0];
       const messageDiv = document.getElementById('message');
-      messageDiv.innerHTML = '<p style="color: blue;">Uploading item...</p>';
+      messageDiv.innerHTML = '<p style="color: blue;">Submitting item...</p>';
 
       try {
-        if (!storage || !db) throw new Error('Firebase services not initialized.');
-
-        const storageRef = storage.ref(`item_images/${Date.now()}_${itemImage.name}`);
-        const snapshot = await storageRef.put(itemImage);
-        const imageUrl = await snapshot.ref.getDownloadURL();
+        if (!db) throw new Error('Firebase Firestore not initialized.');
 
         await db.collection('items').add({
           sellerName,
@@ -72,7 +65,6 @@
           itemDescription,
           itemPrice: Number(itemPrice),
           itemCategory,
-          imageUrl,
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
 
@@ -86,3 +78,4 @@
   </script>
 </body>
 </html>
+

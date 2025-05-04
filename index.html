@@ -23,11 +23,11 @@
   <div class="container">
     <h2>List Your Item</h2>
     <form id="itemForm">
-      <input type="text" id="sellerName" placeholder="Your Name" required>
       <input type="email" id="sellerEmail" placeholder="Your Email" required>
       <input type="text" id="itemTitle" placeholder="Item Title" required>
       <textarea id="itemDescription" placeholder="Item Description" required></textarea>
       <input type="number" id="itemPrice" placeholder="Price" required>
+      <input type="text" id="itemImageUrl" placeholder="Add Image URL (optional)">
       <select id="itemCategory" required>
         <option value="">Select Category</option>
         <option>Electronics</option>
@@ -46,11 +46,11 @@
     document.getElementById('itemForm').addEventListener('submit', async function(e) {
       e.preventDefault();
 
-      const sellerName = document.getElementById('sellerName').value;
       const sellerEmail = document.getElementById('sellerEmail').value;
       const itemTitle = document.getElementById('itemTitle').value;
       const itemDescription = document.getElementById('itemDescription').value;
       const itemPrice = document.getElementById('itemPrice').value;
+      const itemImageUrl = document.getElementById('itemImageUrl').value;
       const itemCategory = document.getElementById('itemCategory').value;
       const messageDiv = document.getElementById('message');
       messageDiv.innerHTML = '<p style="color: blue;">Submitting item...</p>';
@@ -59,11 +59,11 @@
         if (!db) throw new Error('Firebase Firestore not initialized.');
 
         await db.collection('items').add({
-          sellerName,
           sellerEmail,
           itemTitle,
           itemDescription,
           itemPrice: Number(itemPrice),
+          itemImageUrl,
           itemCategory,
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });

@@ -6,34 +6,52 @@
   <title>Seller - Nova Iris Bazaar</title>
   <style>
     body { font-family: 'Segoe UI', sans-serif; background: #f9f9f9; margin: 0; padding: 0; }
-    header { background: #6200ea; color: white; padding: 1.5rem; text-align: center; font-size: 1.6rem; }
+    header { background: #6200ea; color: white; padding: 1.5rem; text-align: center; font-size: 1.6rem; position: relative; }
+    .home-btn {
+      position: absolute;
+      left: 1rem;
+      top: 1.5rem;
+      background: white;
+      color: #6200ea;
+      padding: 0.4rem 1rem;
+      border-radius: 6px;
+      text-decoration: none;
+      font-weight: bold;
+    }
     .container { max-width: 600px; margin: 2rem auto; background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.1); }
     input, select, textarea { width: 100%; padding: 0.8rem; margin-bottom: 1rem; border-radius: 8px; border: 1px solid #ccc; font-size: 1rem; }
     button { background: #6200ea; color: white; padding: 0.9rem; border: none; border-radius: 8px; font-size: 1rem; width: 100%; cursor: pointer; }
     button:hover { background-color: #4b00b3; }
     #message { text-align: center; margin-top: 1rem; font-weight: bold; }
+    #previewContainer { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 1rem; }
+    .preview-img { width: 100px; height: 100px; object-fit: cover; border-radius: 8px; border: 1px solid #ccc; }
   </style>
 </head>
 <body>
-  <header>Seller Page - Nova Iris Bazaar</header>
+  <header>
+    <a href="index.html" class="home-btn">Home</a>
+    Seller Page - Nova Iris Bazaar
+  </header>
   <div class="container">
     <h2>List Your Item</h2>
     <form id="itemForm">
       <input type="text" id="itemTitle" placeholder="Item Title" required />
       <textarea id="itemDescription" placeholder="Item Description" required></textarea>
       <input type="number" id="buyingYear" placeholder="Buying Year (e.g. 2022)" required />
+      <input type="number" id="itemPrice" placeholder="Price (₹)" required />
       <select id="itemCategory" required>
-        <option value="">Select Category</option>
-        <option>Electronics</option>
-        <option>Furniture</option>
-        <option>Books</option>
-        <option>Kids Item</option>
-        <option>Bikes</option>
-        <option>Cars</option>
+        <option value="" disabled selected>Select Category</option>
+        <option value="Electronics">Electronics</option>
+        <option value="Furniture">Furniture</option>
+        <option value="Books">Books</option>
+        <option value="Kids Item">Kids Item</option>
+        <option value="Bikes">Bikes</option>
+        <option value="Cars">Cars</option>
       </select>
       <input type="tel" id="whatsappNumber" placeholder="Your WhatsApp Mobile Number" required pattern="[0-9]{10}" />
       <input type="file" id="images" multiple accept="image/*" />
-      <small>You can upload up to 5 images</small>
+      <small>You can upload up to 5 images (Max 2MB each)</small>
+      <div id="previewContainer"></div>
       <button type="submit">Submit Item</button>
     </form>
     <div id="message"></div>
@@ -46,20 +64,57 @@
 
     const form = document.getElementById('itemForm');
     const messageDiv = document.getElementById('message');
+    const imageInput = document.getElementById('images');
+    const previewContainer = document.getElementById('previewContainer');
+
+    imageInput.addEventListener('change', () => {
+      previewContainer.innerHTML = '';
+      const files = imageInput.files;
+
+      for (let file of files) {
+        if (!file.type.startsWith('image/')) continue;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const img = document.createElement('img');
+          img.src = e.target.result;
+          img.classList.add('preview-img');
+          previewContainer.appendChild(img);
+        };
+        reader.readAsDataURL(file);
+      }
+    });
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
+      messageDiv.style.color = 'black';
       messageDiv.textContent = 'Submitting...';
 
       const title = document.getElementById('itemTitle').value;
       const description = document.getElementById('itemDescription').value;
       const buyingYear = document.getElementById('buyingYear').value;
+      const price = document.getElementById('itemPrice').value;
       const category = document.getElementById('itemCategory').value;
       const whatsappNumber = document.getElementById('whatsappNumber').value;
-      const images = document.getElementById('images').files;
+      const images = imageInput.files;
+
+      const maxSize = 2 * 1024 * 1024;
 
       if (images.length > 5) {
+        messageDiv.style.color = 'red';
         messageDiv.textContent = 'Please upload up to 5 images only.';
+        return;
+      }
+
+      if (![...images].every(file => file.type.startsWith('image/'))) {
+        messageDiv.style.color = 'red';
+        messageDiv.textContent = 'Only image files are allowed.';
+        return;
+      }
+
+      if ([...images].some(file => file.size > maxSize)) {
+        messageDiv.style.color = 'red';
+        messageDiv.textContent = 'Each image must be less than 2MB.';
         return;
       }
 
@@ -77,6 +132,7 @@
           itemTitle: title,
           itemDescription: description,
           buyingYear,
+          itemPrice: price,
           itemCategory: category,
           whatsappNumber,
           imageUrls,
@@ -86,6 +142,7 @@
         messageDiv.style.color = 'green';
         messageDiv.textContent = 'Item listed successfully!';
         form.reset();
+        previewContainer.innerHTML = '';
       } catch (err) {
         console.error(err);
         messageDiv.style.color = 'red';

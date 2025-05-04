@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Buyer - Nova Iris Bazaar</title>
+  <style>
+    body { font-family: Arial; padding: 2rem; background-color: #f4f4f4; }
+    h1 { text-align: center; color: #6200ea; }
+    .item {
+      background: white;
+      border-radius: 8px;
+      padding: 1rem;
+      margin: 1rem auto;
+      max-width: 600px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    .item img {
+      max-width: 100%;
+      margin-top: 10px;
+      border-radius: 4px;
+    }
+  </style>
+  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
+  <script src="firebase.js"></script>
+</head>
+<body>
+  <h1>Items for Sale</h1>
+  <div id="itemsContainer"></div>
+
+  <script>
+    window.onload = async () => {
+      const container = document.getElementById("itemsContainer");
+      try {
+        const snapshot = await db.collection("items").orderBy("createdAt", "desc").get();
+        if (snapshot.empty) {
+          container.innerHTML = "<p>No items listed yet.</p>";
+        } else {
+          snapshot.forEach(doc => {
+            const item = doc.data();
+            const images = item.imageUrls || [];
+            const itemEl = document.createElement("div");
+            itemEl.className = "item";
+            itemEl.innerHTML = `
+              <h3>${item.itemTitle}</h3>
+              <p>${item.itemDescription}</p>
+              <p><strong>Price:</strong> ₹${item.itemPrice}</p>
+              <p><strong>Category:</strong> ${item.itemCategory}</p>
+              ${images.map(url => `<img src="${url}" alt="Item Image" />`).join("")}
+            `;
+            container.appendChild(itemEl);
+          });
+        }
+      } catch (err) {
+        console.error("Error loading items:", err);
+        container.innerHTML = "<p style='color:red;'>Failed to load items.</p>";
+      }
+    };
+  </script>
+</body>
+</html>

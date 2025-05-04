@@ -1,94 +1,25 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Seller - Nova Iris Bazaar</title>
+  <meta charset="UTF-8">
+  <title>Nova Iris Bazaar</title>
   <style>
-    body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0; }
-    header { background-color: #6200ea; color: white; padding: 1rem; text-align: center; }
-    .container { max-width: 800px; margin: 2rem auto; background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-    input, select, textarea { width: 100%; padding: 0.5rem; margin-bottom: 1rem; border-radius: 4px; border: 1px solid #ccc; }
-    button { padding: 0.7rem; background-color: #6200ea; color: white; border: none; border-radius: 4px; cursor: pointer; width: 100%; }
-    #message { margin-top: 1rem; text-align: center; }
+    body { font-family: sans-serif; text-align: center; margin-top: 100px; }
+    h1 { color: #6200ea; }
+    a {
+      display: inline-block;
+      margin: 20px;
+      padding: 15px 30px;
+      background: #6200ea;
+      color: white;
+      text-decoration: none;
+      border-radius: 5px;
+    }
   </style>
-  <!-- Firebase SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-storage-compat.js"></script>
-  <script src="firebase.js"></script>
 </head>
 <body>
-  <header>
-    <h1>Seller Page - Nova Iris Bazaar</h1>
-  </header>
-  <div class="container">
-    <h2>List Your Item</h2>
-    <form id="itemForm">
-      <input type="email" id="sellerEmail" placeholder="Your Email" required>
-      <input type="text" id="itemTitle" placeholder="Item Title" required>
-      <textarea id="itemDescription" placeholder="Item Description" required></textarea>
-      <input type="number" id="itemPrice" placeholder="Price" required>
-      <select id="itemCategory" required>
-        <option value="">Select Category</option>
-        <option>Electronics</option>
-        <option>Furniture</option>
-        <option>Books</option>
-        <option>Kids Item</option>
-        <option>Bikes</option>
-        <option>Cars</option>
-      </select>
-      <input type="file" id="itemImages" accept="image/*" multiple required>
-      <small>You can upload up to 5 images</small>
-      <button type="submit">Submit Item</button>
-    </form>
-    <div id="message"></div>
-  </div>
-
-  <script>
-    document.getElementById('itemForm').addEventListener('submit', async function(e) {
-      e.preventDefault();
-      const sellerEmail = document.getElementById('sellerEmail').value;
-      const itemTitle = document.getElementById('itemTitle').value;
-      const itemDescription = document.getElementById('itemDescription').value;
-      const itemPrice = document.getElementById('itemPrice').value;
-      const itemCategory = document.getElementById('itemCategory').value;
-      const itemImages = document.getElementById('itemImages').files;
-      const messageDiv = document.getElementById('message');
-      messageDiv.innerHTML = '<p style="color: blue;">Uploading item...</p>';
-
-      if (itemImages.length > 5) {
-        messageDiv.innerHTML = '<p style="color: red;">You can upload a maximum of 5 images.</p>';
-        return;
-      }
-
-      try {
-        const imageUrls = [];
-        for (let i = 0; i < itemImages.length; i++) {
-          const image = itemImages[i];
-          const storageRef = storage.ref(`item_images/${Date.now()}_${image.name}`);
-          const snapshot = await storageRef.put(image);
-          const downloadURL = await snapshot.ref.getDownloadURL();
-          imageUrls.push(downloadURL);
-        }
-
-        await db.collection('items').add({
-          sellerEmail,
-          itemTitle,
-          itemDescription,
-          itemPrice: Number(itemPrice),
-          itemCategory,
-          imageUrls,
-          createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-
-        messageDiv.innerHTML = '<p style="color: green;">Item listed successfully!</p>';
-        document.getElementById('itemForm').reset();
-      } catch (error) {
-        console.error("Error adding item: ", error);
-        messageDiv.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
-      }
-    });
-  </script>
+  <h1>Welcome to Nova Iris Bazaar</h1>
+  <a href="seller.html">Seller Page</a>
+  <a href="buyer.html">Buyer Page</a>
 </body>
 </html>

@@ -5,30 +5,23 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Seller - Nova Iris Bazaar</title>
   <style>
-    body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0; }
-    header { background-color: #6200ea; color: white; padding: 1rem; text-align: center; }
-    .container { max-width: 800px; margin: 2rem auto; background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-    input, select, textarea { width: 100%; padding: 0.5rem; margin-bottom: 1rem; border-radius: 4px; border: 1px solid #ccc; }
-    button { padding: 0.7rem; background-color: #6200ea; color: white; border: none; border-radius: 4px; cursor: pointer; width: 100%; }
-    #message { margin-top: 1rem; text-align: center; }
+    body { font-family: 'Segoe UI', sans-serif; background: #f9f9f9; margin: 0; padding: 0; }
+    header { background: #6200ea; color: white; padding: 1.5rem; text-align: center; font-size: 1.6rem; }
+    .container { max-width: 600px; margin: 2rem auto; background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.1); }
+    input, select, textarea { width: 100%; padding: 0.8rem; margin-bottom: 1rem; border-radius: 8px; border: 1px solid #ccc; font-size: 1rem; }
+    button { background: #6200ea; color: white; padding: 0.9rem; border: none; border-radius: 8px; font-size: 1rem; width: 100%; cursor: pointer; }
+    button:hover { background-color: #4b00b3; }
+    #message { text-align: center; margin-top: 1rem; font-weight: bold; }
   </style>
-  <!-- Firebase SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-storage-compat.js"></script>
-  <script src="firebase.js"></script>
 </head>
 <body>
-  <header>
-    <h1>Seller Page - Nova Iris Bazaar</h1>
-  </header>
+  <header>Seller Page - Nova Iris Bazaar</header>
   <div class="container">
     <h2>List Your Item</h2>
     <form id="itemForm">
-      <input type="email" id="sellerEmail" placeholder="Your Email" required>
-      <input type="text" id="itemTitle" placeholder="Item Title" required>
+      <input type="text" id="itemTitle" placeholder="Item Title" required />
       <textarea id="itemDescription" placeholder="Item Description" required></textarea>
-      <input type="number" id="itemPrice" placeholder="Price" required>
+      <input type="number" id="buyingYear" placeholder="Buying Year (e.g. 2022)" required />
       <select id="itemCategory" required>
         <option value="">Select Category</option>
         <option>Electronics</option>
@@ -38,55 +31,65 @@
         <option>Bikes</option>
         <option>Cars</option>
       </select>
-      <input type="file" id="itemImages" accept="image/*" multiple required>
+      <input type="tel" id="whatsappNumber" placeholder="Your WhatsApp Mobile Number" required pattern="[0-9]{10}" />
+      <input type="file" id="images" multiple accept="image/*" />
       <small>You can upload up to 5 images</small>
       <button type="submit">Submit Item</button>
     </form>
     <div id="message"></div>
   </div>
 
-  <script>
-    document.getElementById('itemForm').addEventListener('submit', async function(e) {
-      e.preventDefault();
-      const sellerEmail = document.getElementById('sellerEmail').value;
-      const itemTitle = document.getElementById('itemTitle').value;
-      const itemDescription = document.getElementById('itemDescription').value;
-      const itemPrice = document.getElementById('itemPrice').value;
-      const itemCategory = document.getElementById('itemCategory').value;
-      const itemImages = document.getElementById('itemImages').files;
-      const messageDiv = document.getElementById('message');
-      messageDiv.innerHTML = '<p style="color: blue;">Uploading item...</p>';
+  <script type="module">
+    import { db, storage } from './firebase.js';
+    import { collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore.js";
+    import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.6.0/firebase-storage.js";
 
-      if (itemImages.length > 5) {
-        messageDiv.innerHTML = '<p style="color: red;">You can upload a maximum of 5 images.</p>';
+    const form = document.getElementById('itemForm');
+    const messageDiv = document.getElementById('message');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      messageDiv.textContent = 'Submitting...';
+
+      const title = document.getElementById('itemTitle').value;
+      const description = document.getElementById('itemDescription').value;
+      const buyingYear = document.getElementById('buyingYear').value;
+      const category = document.getElementById('itemCategory').value;
+      const whatsappNumber = document.getElementById('whatsappNumber').value;
+      const images = document.getElementById('images').files;
+
+      if (images.length > 5) {
+        messageDiv.textContent = 'Please upload up to 5 images only.';
         return;
       }
 
       try {
         const imageUrls = [];
-        for (let i = 0; i < itemImages.length; i++) {
-          const image = itemImages[i];
-          const storageRef = storage.ref(`item_images/${Date.now()}_${image.name}`);
-          const snapshot = await storageRef.put(image);
-          const downloadURL = await snapshot.ref.getDownloadURL();
-          imageUrls.push(downloadURL);
+
+        for (let i = 0; i < images.length; i++) {
+          const imageRef = ref(storage, `items/${Date.now()}_${images[i].name}`);
+          await uploadBytes(imageRef, images[i]);
+          const url = await getDownloadURL(imageRef);
+          imageUrls.push(url);
         }
 
-        await db.collection('items').add({
-          sellerEmail,
-          itemTitle,
-          itemDescription,
-          itemPrice: Number(itemPrice),
-          itemCategory,
+        await addDoc(collection(db, 'items'), {
+          itemTitle: title,
+          itemDescription: description,
+          buyingYear,
+          itemCategory: category,
+          whatsappNumber,
           imageUrls,
-          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+          createdAt: serverTimestamp()
         });
 
-        messageDiv.innerHTML = '<p style="color: green;">Item listed successfully!</p>';
-        document.getElementById('itemForm').reset();
-      } catch (error) {
-        console.error("Error adding item: ", error);
-        messageDiv.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+        messageDiv.style.color = 'green';
+        messageDiv.textContent = 'Item listed successfully!';
+        form.reset();
+      } catch (err) {
+        console.error(err);
+        messageDiv.style.color = 'red';
+        messageDiv.textContent = 'Error submitting item. Please try again.';
       }
     });
   </script>
